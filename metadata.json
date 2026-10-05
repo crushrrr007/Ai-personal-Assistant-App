@@ -1,0 +1,6 @@
+{
+  "name": "Assistant",
+  "description": "An AI personal assistant that keeps track of reminders, plans the day, and sends proactive nudges.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
