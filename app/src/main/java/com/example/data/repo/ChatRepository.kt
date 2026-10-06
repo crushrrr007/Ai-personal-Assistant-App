@@ -70,8 +70,10 @@ sealed class PendingModification(
 
 data class ChatProcessResult(
     val reply: String,
-    val createdTask: Task? = null,
-    val createdNote: Note? = null,
+    val createdTasks: List<Task> = emptyList(),
+    val createdNotes: List<Note> = emptyList(),
+    val createdTask: Task? = createdTasks.firstOrNull(),
+    val createdNote: Note? = createdNotes.firstOrNull(),
     val proposedModification: PendingModification? = null,
     val clarification: String? = null,
     val isError: Boolean = false
@@ -110,13 +112,18 @@ class ChatRepository(
 
         if (interpretResult.isSuccess) {
             val result = interpretResult.getOrThrow()
-            var savedTask: Task? = null
-            var savedNote: Note? = null
+            val createdTasksList = mutableListOf<Task>()
+            val createdNotesList = mutableListOf<Note>()
             var proposedMod: PendingModification? = null
 
-            // Handle create_task
-            if (result.intent == InterpretResult.INTENT_CREATE_TASK && result.task != null) {
-                val parsed = result.task
+            // Handle tasks creation (supports both batch list and single task)
+            val tasksToProcess = when {
+                result.tasksToCreate.isNotEmpty() -> result.tasksToCreate
+                result.task != null -> listOf(result.task)
+                else -> emptyList()
+            }
+
+            for (parsed in tasksToProcess) {
                 val newTask = Task(
                     title = parsed.title,
                     dueAt = parsed.dueAtEpochMs,
@@ -127,18 +134,24 @@ class ChatRepository(
                     source = Task.SOURCE_AI
                 )
                 val id = taskRepository.insertTask(newTask)
-                savedTask = newTask.copy(id = id)
+                createdTasksList.add(newTask.copy(id = id))
             }
 
-            // Handle create_note
-            if (result.intent == InterpretResult.INTENT_CREATE_NOTE && result.note != null) {
+            // Handle notes creation (supports both batch list and single note)
+            val notesToProcess = when {
+                result.notesToCreate.isNotEmpty() -> result.notesToCreate
+                result.note != null -> listOf(result.note)
+                else -> emptyList()
+            }
+
+            for (parsedNote in notesToProcess) {
                 val newNote = Note(
-                    title = result.note.title,
-                    body = result.note.body,
+                    title = parsedNote.title,
+                    body = parsedNote.body,
                     fromChat = true
                 )
                 val id = noteDao.insertNote(newNote)
-                savedNote = newNote.copy(id = id)
+                createdNotesList.add(newNote.copy(id = id))
             }
 
             // Handle modify_task
@@ -203,8 +216,10 @@ class ChatRepository(
 
             ChatProcessResult(
                 reply = replyText,
-                createdTask = savedTask,
-                createdNote = savedNote,
+                createdTasks = createdTasksList,
+                createdNotes = createdNotesList,
+                createdTask = createdTasksList.firstOrNull(),
+                createdNote = createdNotesList.firstOrNull(),
                 proposedModification = proposedMod,
                 clarification = result.clarification,
                 isError = false

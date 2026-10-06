@@ -441,15 +441,24 @@ You can directly copy the text below into PowerPoint or Google Slides:
 ### Q20: What makes this project unique compared to existing todo apps on the Play Store?
 > **Answer**: Most todo apps are either passive data entry lists (Todoist, Google Tasks) or cloud-heavy chatbots (ChatGPT) with no native device integration. Our app bridges both worlds: it provides the conversational intelligence of an LLM with the deep hardware integration, privacy, exact alarms, and instant speed of a 100% native offline SQLite Android app.
 
+### Q21: How does user authentication work in your offline-first application?
+> **Answer**: The app has an offline-first authentication system backed by the local Room SQLite database (`users` table). On launch, `NavigationShell` checks `AuthRepository.sessionState`. If no session is active, it displays `AuthScreen` allowing the user to either **Sign In**, **Register** a new account, or **Continue as Guest**. Sessions are persisted in Android `SharedPreferences`. In the main app, tapping the profile chip on the `TodayScreen` allows the user to view their account and **Sign Out** at any time.
+
+### Q22: How do you securely store passwords in the local database?
+> **Answer**: We never store plaintext passwords. We implemented `PasswordHasher.kt`, which uses the cryptographic standard `SHA-256` combined with a unique, cryptographically random 16-byte salt generated via `SecureRandom`. The hash is stored as `Base64(SHA256(password + salt))`. When verifying during login, we hash the candidate password with the user's stored salt and compare using `MessageDigest.isEqual(...)`, which performs a constant-time byte comparison to eliminate side-channel timing attacks.
+
 ---
 
 ## 💡 Quick Tips for Tomorrow's Viva
 1. **Live Demo Sequence**:
-   - Open **Today Screen**: Point out the dynamic greeting, timezone chip, and "Next Up" task.
+   - Launch app: Show the **AuthScreen** with Login, Register, and "Continue as Guest →".
+   - Register an account (e.g. `Himanshu`, `himanshu@example.com`, `pass123`) or tap "Continue as Guest".
+   - Open **Today Screen**: Point out the personalized greeting ("Good morning, Himanshu"), profile chip, timezone chip, and "Next Up" task.
+   - Tap profile chip to show user details and Sign Out action.
    - Open **Chat**: Send a voice or text command: *"Schedule MAD Project Presentation for tomorrow at 2:30 PM with a 15 min reminder"*.
    - Show how the AI returns structured confirmation, creates the task in **Tasks Screen** with header `Tomorrow (Tue, Oct 6)`, and registers the exact alarm in Android OS.
    - Switch timezone in the top bar to show instant reactive UI updates.
 2. **Key Buzzwords to Emphasize**:
-   - *Declarative Jetpack Compose*, *Offline-First Architecture*, *Exact RTC_WAKEUP Alarms*, *Doze Mode Resistance*, *Structured JSON LLM Prompting*, *Unidirectional Data Flow (UDF)*.
+   - *Local Room Authentication*, *Salted SHA-256 Password Cryptography*, *Declarative Jetpack Compose*, *Offline-First Architecture*, *Exact RTC_WAKEUP Alarms*, *Doze Mode Resistance*, *Structured JSON LLM Prompting*, *Unidirectional Data Flow (UDF)*.
 
 *Good luck with your viva and presentation! You have a robust, production-grade project.*

@@ -1,90 +1,77 @@
-# Implementation Plan: Comprehensive Project Viva & Architecture Guide
+# Repository Cleanup & Export Preparation
 
-Generate a complete, rigorous, and presentation-ready documentation guide (`PROJECT_VIVA_AND_ARCHITECTURE_GUIDE.md`) to help you prepare your presentation slides (PPT) and ace tomorrow's viva examination.
+Clean up and structure the repository for project export (ZIP export / GitHub repository) by organizing all documentation into a dedicated `/docs` folder, generating a professional academic and open-source `README.md`, optimizing `.gitignore`, and verifying build integrity.
 
-## Proposed Documentation Structure
+## User Review & Critical Decisions
 
-### 1. Project Overview & Pitch
-- **Project Title & Identity**: AI Personal Coordinator & Smart Task Manager.
-- **Problem Statement**: Traditional to-do apps require manual data entry, complex multi-tap date pickers, and lack smart context-aware scheduling.
-- **Solution**: A privacy-conscious, offline-first personal assistant combining Google Gemini AI with local SQLite persistence and exact Android system alarm notifications.
+> [!IMPORTANT]
+> The following user preferences were confirmed and govern this cleanup plan:
 
-### 2. End-to-End System Architecture
-- **Architecture Pattern**: MVVM (Model-View-ViewModel) + Clean Architecture + Repository Pattern.
-- **Data Flow Diagram**:
-  `Compose UI` ⇆ `ViewModel (StateFlow)` ⇆ `Repository Layer` ⇆ `Room Database (SQLite)` & `System AlarmManager` & `Gemini LLM (REST API)`.
-- **Key Design Principles**: Single Source of Truth (SSOT), Reactive Streams (`Flow`/`StateFlow`), Unidirectional Data Flow (UDF), Offline-First.
-
-### 3. Component-by-Component Technical Deep Dive & File Directory
-Detailed file-by-file breakdown explaining *What it does*, *How it works under the hood*, and *Exact file location*:
-- **UI & Presentation (`com.example.ui`)**:
-  - `MainActivity.kt` & `AppNavigation.kt`: Jetpack Compose navigation host, bottom nav bar, theme setup.
-  - `today/TodayScreen.kt` & `TodayViewModel.kt`: Real-time greeting, daily statistics, next-up task, time-blocked daily plan.
-  - `tasks/TasksScreen.kt` & `TasksViewModel.kt`: Reactive task grouping, date headers with explicit calendar dates, filter tabs (Today, Upcoming, Done), swipe/FAB actions.
-  - `notes/NotesScreen.kt` & `NotesViewModel.kt`: Offline notes creation, search, card view.
-  - `chat/ChatScreen.kt` & `ChatViewModel.kt`: Real-time chat stream, task modification cards, interactive confirmation dialogs.
-  - `voice/VoiceInputHandler.kt`: Android `SpeechRecognizer` integration for voice commands.
-  - `components/TimezoneSelectionDialog.kt` & `util/TimezoneManager.kt`: Real-world timezone auto-detection and persistence.
-  - `util/DateTimeUtils.kt`: Date/time conversion between UTC epoch milliseconds and localized date strings.
-- **Data & Persistence Layer (`com.example.data.local`)**:
-  - `AppDatabase.kt`: Room database initialization, migration, SQLite open helper.
-  - `Task.kt`, `TaskDao.kt`: Entity schema, reactive SQL queries using Kotlin Coroutines Flow.
-  - `Note.kt`, `NoteDao.kt`: Offline note schema and search queries.
-  - `ChatMessage.kt`, `ChatDao.kt`: Conversation persistence and message history.
-  - `DailyPlanEntity.kt`, `DailyPlanDao.kt`: Stored time blocks for day planning.
-- **Domain & Repository Layer (`com.example.data.repo`)**:
-  - `TaskRepository.kt`: Bridge between database, AlarmManager, and UI. Includes undo stack.
-  - `NoteRepository.kt`: Note lifecycle management.
-  - `ChatRepository.kt`: Prepares AI prompt with database context, executes Gemini API calls, validates JSON schema, applies task modifications atomically.
-  - `DailyPlanRepository.kt`: Feeds pending tasks to the LLM to generate daily time blocks.
-- **AI & Natural Language Processing (`com.example.ai` & `com.example.data.remote`)**:
-  - `GeminiLlmService.kt`: OkHttp + Kotlinx Serialization integration with Google Gemini 2.5 Flash using JSON-only schema mode.
-  - `PromptBuilder.kt`: Context-aware prompt engine injecting current date/time, active timezone, upcoming tasks, and notes into system instructions.
-  - `LocalIntentParser.kt`: Fallback rule-based NLP engine ensuring the app can parse reminders even with 0% internet connectivity.
-- **Hardware & Android System Services (`com.example.reminder`)**:
-  - `ReminderScheduler.kt`: Android `AlarmManager.setExactAndAllowWhileIdle` for guaranteed battery-efficient wake-ups.
-  - `ReminderReceiver.kt`: `BroadcastReceiver` receiving the exact alarm trigger.
-  - `NotificationHelper.kt`: High-importance `NotificationChannel` with vibration and sound.
-
-### 4. PPT Slide-by-Slide Blueprint (10 Slides)
-Ready-to-copy slide outlines with Slide Title, Bullet Points, and Speaker Notes:
-- Slide 1: Title & Team Members
-- Slide 2: Problem Statement & Motivation
-- Slide 3: Proposed Solution & Core Features
-- Slide 4: System Architecture & Tech Stack
-- Slide 5: Jetpack Compose UI & State Management
-- Slide 6: Offline-First Room SQLite Database
-- Slide 7: Gemini AI Integration & Prompt Engineering
-- Slide 8: Android Background Alarms & Notification Architecture
-- Slide 9: Demo Screenshots & Walkthrough
-- Slide 10: Conclusion & Future Scope
-
-### 5. Top 20 Examiner Viva Questions & Model Answers
-Comprehensive answers to likely questions asked by university/technical examiners:
-1. *Why did you use Jetpack Compose instead of XML layouts?*
-2. *Why use Room Database instead of direct SQLiteOpenHelper or SharedPreferences?*
-3. *How does the app handle offline mode when Gemini API is unreachable?*
-4. *Why AlarmManager instead of WorkManager for reminders?*
-5. *How do you prevent SQL injection and data inconsistency in Room?*
-6. *How do Kotlin Coroutines and StateFlow work in this app?*
-7. *What is Unidirectional Data Flow (UDF)?*
-8. *How do you enforce structured JSON output from Gemini?*
-9. *How does the app handle timezone discrepancies between device and user?*
-10. *How does the app schedule exact alarms in Android 12+ (SCHEDULE_EXACT_ALARM)?*
-11. *What is the role of BroadcastReceiver in reminders?*
-12. *Explain the MVVM architecture and separation of concerns.*
-13. *What is LazyColumn and how is it optimized compared to RecyclerView?*
-14. *How does speech-to-text work in the app?*
-15. *How is user privacy protected regarding notes and tasks?*
-16. *What are Room TypeConverters and why are they needed?*
-17. *How does `setExactAndAllowWhileIdle()` handle Android Doze mode?*
-18. *Why is `collectAsStateWithLifecycle()` preferred over `collectAsState()`?*
-19. *What is the purpose of `remember` and `rememberSaveable` in Compose?*
-20. *If your app scaled to 1,000,000 tasks, how would you optimize database queries?*
+- **Confirmed Decision 1**: Move all six documentation and viva preparation guides (`PROJECT_PRESENTATION_SLIDES.md`, `PROJECT_VIVA_AND_ARCHITECTURE_GUIDE.md`, `SYSTEM_WORKFLOW_AND_DATA_FLOWS.md`, `KOTLIN_TO_JAVA_EXPLANATION_GUIDE.md`, `API_FUNCTIONS_AND_LIBRARIES_REFERENCE.md`, `VIVA_QUESTIONS.md`) into a dedicated `/docs` directory.
+- **Confirmed Decision 2**: Create a comprehensive, production-grade `README.md` in the project root with architecture diagrams, setup instructions, feature highlights, and direct index links to all guides.
+- **Confirmed Decision 3**: Optimize `.gitignore` for standard Android Studio / GitHub exports, removing unwanted caches and build artifacts.
 
 ---
 
-## Verification Plan
-- Create `PROJECT_VIVA_AND_ARCHITECTURE_GUIDE.md` in the project root.
-- Ensure all file paths, class names, methods, and architecture explanations precisely match the actual codebase.
-- Verify the build using `compile_applet` to confirm the project remains completely healthy.
+## 1. Overview & Core Concept
+
+- **What It Does**: Transforms the workspace into a clean, professional, and well-structured Android repository ready for university submission, external grading, GitHub publishing, and APK generation.
+- **Target Audience / Persona**: Evaluators, examiners, developers cloning or importing the project in Android Studio.
+- **Key Value**: Delivers an immediately intuitive repository where the root contains standard Android project files and a polished `README.md`, while all presentation slides and defense guides are neatly organized inside `/docs`.
+
+---
+
+## 2. Directory Structure & Organization
+
+### Target Repository Layout
+
+```
+.
+├── app/                           # Android application module (Compose UI, ViewModels, Room DB, Alarms)
+│   ├── src/main/java/com/example/
+│   │   ├── data/                  # Room Entities, DAOs, Repositories, Database
+│   │   ├── domain/model/          # Clean Architecture Models (Task, Note, Plan, User)
+│   │   ├── service/               # Gemini AI Service, Alarm Scheduler, Notification Helper
+│   │   └── ui/                    # Jetpack Compose Screens (Today, Chat, Tasks, Notes, Auth)
+│   └── src/main/res/              # Android Resources (Drawables, Values, Colors, Icons)
+├── docs/                          # Dedicated Documentation & Viva Defense Folder
+│   ├── PROJECT_PRESENTATION_SLIDES.md            # 12-slide Marp/PowerPoint defense deck
+│   ├── PROJECT_VIVA_AND_ARCHITECTURE_GUIDE.md   # System architecture & top 20 viva Q&A
+│   ├── SYSTEM_WORKFLOW_AND_DATA_FLOWS.md         # Mermaid & ASCII data flow traces
+│   ├── KOTLIN_TO_JAVA_EXPLANATION_GUIDE.md       # Side-by-side Kotlin vs Java translations
+│   ├── API_FUNCTIONS_AND_LIBRARIES_REFERENCE.md  # Architectural functions & libraries dictionary
+│   └── VIVA_QUESTIONS.md                         # Quick-reference viva questions checklist
+├── gradle/                        # Gradle wrapper & Version Catalog (libs.versions.toml)
+├── .env.example                   # Environment variable template for Gemini API key
+├── .gitignore                     # Production Android gitignore (caches, IDE files, keystores)
+├── build.gradle.kts               # Root build configuration
+├── gradle.properties              # JVM memory & Gradle settings
+├── metadata.json                  # AI Studio platform descriptor
+├── README.md                      # Comprehensive project documentation & getting started guide
+└── settings.gradle.kts            # Project repositories and module settings
+```
+
+---
+
+## 3. Key Product Decisions & Trade-Offs
+
+- **Decision 1: Dedicated `/docs` Directory vs Root Clutter**
+  - *Chosen Approach*: Group all documentation in `/docs` and keep only `README.md` in the root.
+  - *Why*: Adheres to standard open-source Android conventions. Android Studio and GitHub show a clean root directory without dozens of markdown files competing with build files.
+- **Decision 2: Comprehensive `README.md` with Direct Index**
+  - *Chosen Approach*: The root `README.md` acts as an executive portal linking to every document in `/docs`, providing quick setup commands (`./gradlew assembleDebug`), architecture highlights, and screenshots/feature summaries.
+  - *Why*: Evaluators opening the GitHub repo or ZIP extract can read everything in one place with click-through links to the slide deck and viva guides.
+
+---
+
+## 4. Technical Architecture & Verification
+
+### Step-by-Step Execution Plan
+1. **Create `/docs` Folder & Relocate Documents**:
+   - Move all 6 markdown guides into `/docs/`.
+2. **Author Root `README.md`**:
+   - Write a complete, polished `README.md` formatted with clean markdown, tech stack badges, system diagrams, and documentation links.
+3. **Enhance `.gitignore`**:
+   - Add standard patterns for `.build-outputs/`, OS files (`.DS_Store`, `Thumbs.db`), Android build caches, and sensitive files.
+4. **Compile & Unit Test Verification**:
+   - Run `compile_applet` and `gradle :app:testDebugUnitTest` to guarantee zero regressions.

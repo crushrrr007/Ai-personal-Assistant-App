@@ -1,18 +1,60 @@
-*.iml
-.gradle
-.kotlin
+# Built application files
+*.apk
+*.aar
+*.aab
+/build
+/*/build
+.build-outputs/
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+.externalNativeBuild
+.cxx
+
+# Gradle files
+.gradle/
+build/
+.kotlin/
+
+# Local configuration file (sdk path, etc)
+local.properties
 /local.properties
+
+# Log Files
+*.log
+
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/
+/.idea/
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-.env
+
+# Keystore files (Keep debug keystore base64 in container, exclude generated binary keystores)
+*.jks
+*.keystore
 debug.keystore
+
+# Sensitive Environment Files
+.env
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

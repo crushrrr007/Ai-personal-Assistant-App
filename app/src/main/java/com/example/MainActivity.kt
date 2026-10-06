@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
             AssistantTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     NavigationShell(
+                        authRepository = app.authRepository,
                         taskRepository = app.taskRepository,
                         dailyPlanRepository = app.dailyPlanRepository,
                         chatRepository = app.chatRepository,

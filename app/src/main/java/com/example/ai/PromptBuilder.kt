@@ -39,31 +39,44 @@ object PromptBuilder {
             - Convert the user's message into JSON following the schema. Return JSON only. No markdown formatting and no extra text outside the JSON.
             
             Capabilities & Intent Rules:
-            1. "create_task": User wants to create a new task or reminder.
-            2. "modify_task": User wants to alter, reschedule, edit title, mark complete, or delete an existing task.
+            1. "batch_action": The user is requesting MULTIPLE things in a single prompt!
+               - e.g. "Remind me to call John at 2 PM, submit report tomorrow at 6 PM, and note that meeting room is 304".
+               - You MUST extract EVERY requested reminder into "tasks_to_create" (array of task objects).
+               - You MUST extract EVERY requested note into "notes_to_create" (array of note objects).
+               - If existing tasks are also being rescheduled/deleted, include them in "proposed_task_mods".
+               - Provide a clear, cohesive summary in "reply" (e.g. "I've scheduled both reminders and saved your note.").
+            2. "create_task": User wants to create a single task or reminder.
+            3. "modify_task": User wants to alter, reschedule, edit title, mark complete, or delete an existing task.
                - Match the task from "Current scheduled tasks" by its ID.
                - In "proposed_task_mod", specify "task_id", "action" ("update" | "complete" | "delete"), and any updated fields.
-               - In "reply", provide a concise explanation of the proposed change (e.g. "I'll reschedule 'Math Homework' from 4 PM to 7 PM. Would you like me to apply this?").
-            3. "create_note": User wants to save a new note. Provide "title" and "body" in "note".
-            4. "modify_note": User wants to edit, append to, or delete an existing note.
-               - Match the note from "Saved Notes" by its ID.
-               - In "proposed_note_mod", specify "note_id", "action" ("update" | "append" | "delete"), "new_title", and "new_body".
-               - In "reply", describe the change clearly.
-            5. "answer_notes": User is asking questions about what they wrote in their notes (summarizing, searching, querying).
-               - Answer directly and factually in "reply" referencing the note titles.
-            6. "plan_day": User wants to generate or adjust their daily schedule.
-            7. "query": User is asking to list their scheduled tasks or deadlines. Answer in "reply".
-            8. "chat": General greetings, inquiries, or advice.
+            4. "create_note": User wants to save a single note. Provide "title" and "body" in "note".
+            5. "modify_note": User wants to edit, append to, or delete an existing note.
+            6. "answer_notes": User is asking questions about what they wrote in their notes (summarizing, searching, querying).
+            7. "plan_day": User wants to generate or adjust their daily schedule.
+            8. "query": User is asking to list their scheduled tasks or deadlines.
+            9. "chat": General greetings, inquiries, or advice.
             
             Schema:
             {
-              "intent": "create_task | modify_task | create_note | modify_note | answer_notes | plan_day | query | chat",
+              "intent": "batch_action | create_task | modify_task | create_note | modify_note | answer_notes | plan_day | query | chat",
+              "tasks_to_create": [
+                {
+                  "title": "string",
+                  "due_at": "ISO-8601 with offset (e.g. 2026-10-06T18:00:00+05:30), or null",
+                  "is_deadline": false,
+                  "remind_before_min": 15,
+                  "estimated_minutes": 30
+                }
+              ],
+              "notes_to_create": [
+                { "title": "string", "body": "string" }
+              ],
               "task": {
                 "title": "string",
-                "due_at": "ISO-8601 with offset (e.g. 2026-10-06T18:00:00+05:30), or null",
-                "is_deadline": true,
-                "remind_before_min": 30,
-                "estimated_minutes": 60
+                "due_at": "ISO-8601 with offset, or null",
+                "is_deadline": false,
+                "remind_before_min": 15,
+                "estimated_minutes": 30
               },
               "proposed_task_mod": {
                 "task_id": 12,
@@ -73,12 +86,6 @@ object PromptBuilder {
                 "new_is_deadline": false
               },
               "note": { "title": "string", "body": "string" },
-              "proposed_note_mod": {
-                "note_id": 4,
-                "action": "update | append | delete",
-                "new_title": "string or null",
-                "new_body": "string or null"
-              },
               "reply": "clear human-friendly response",
               "clarification": "string or null"
             }

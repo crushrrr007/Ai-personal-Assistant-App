@@ -11,6 +11,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [
+        User::class,
         Task::class,
         PlanBlock::class,
         DailyPlanEntity::class,
@@ -18,11 +19,12 @@ import androidx.room.RoomDatabase
         ChatMessage::class,
         PlanFeedback::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
+    abstract fun userDao(): UserDao
     abstract fun taskDao(): TaskDao
     abstract fun planDao(): PlanDao
     abstract fun dailyPlanDao(): DailyPlanDao

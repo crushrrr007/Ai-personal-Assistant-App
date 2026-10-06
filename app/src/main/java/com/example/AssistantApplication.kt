@@ -49,6 +49,13 @@ class AssistantApplication : Application() {
         )
     }
 
+    val authRepository: com.example.data.repo.AuthRepository by lazy {
+        com.example.data.repo.AuthRepository(
+            userDao = database.userDao(),
+            context = this
+        )
+    }
+
     val chatRepository: ChatRepository by lazy {
         ChatRepository(
             chatDao = database.chatDao(),

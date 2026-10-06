@@ -15,10 +15,18 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+data class BatchCreationSummary(
+    val tasks: List<Task> = emptyList(),
+    val notes: List<com.example.data.local.Note> = emptyList()
+) {
+    val totalCount: Int get() = tasks.size + notes.size
+}
+
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isThinking: Boolean = false,
     val lastCreatedTask: Task? = null,
+    val batchSummary: BatchCreationSummary? = null,
     val pendingModification: PendingModification? = null,
     val clarification: String? = null,
     val errorMessage: String? = null,
@@ -28,6 +36,7 @@ data class ChatUiState(
 private data class ChatTransientState(
     val isThinking: Boolean = false,
     val lastCreatedTask: Task? = null,
+    val batchSummary: BatchCreationSummary? = null,
     val pendingModification: PendingModification? = null,
     val clarification: String? = null,
     val errorMessage: String? = null,
@@ -48,6 +57,7 @@ class ChatViewModel(
             messages = messages,
             isThinking = transient.isThinking,
             lastCreatedTask = transient.lastCreatedTask,
+            batchSummary = transient.batchSummary,
             pendingModification = transient.pendingModification,
             clarification = transient.clarification,
             errorMessage = transient.errorMessage,
@@ -69,6 +79,7 @@ class ChatViewModel(
                 errorMessage = null,
                 clarification = null,
                 lastCreatedTask = null,
+                batchSummary = null,
                 pendingModification = null,
                 lastSentPrompt = trimmed
             )
@@ -77,10 +88,20 @@ class ChatViewModel(
         viewModelScope.launch {
             try {
                 val result = chatRepository.sendMessage(trimmed)
+                val isMultiItem = (result.createdTasks.size + result.createdNotes.size > 1) ||
+                        (result.createdTasks.isNotEmpty() && result.createdNotes.isNotEmpty())
+                val summary = if (isMultiItem) {
+                    BatchCreationSummary(
+                        tasks = result.createdTasks,
+                        notes = result.createdNotes
+                    )
+                } else null
+
                 _transientState.update {
                     it.copy(
                         isThinking = false,
-                        lastCreatedTask = result.createdTask,
+                        lastCreatedTask = if (summary == null) result.createdTask else null,
+                        batchSummary = summary,
                         pendingModification = result.proposedModification,
                         clarification = result.clarification,
                         errorMessage = if (result.isError) result.reply else null

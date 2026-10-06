@@ -10,6 +10,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +22,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -88,25 +92,21 @@ fun ChatScreen(
         viewModel.sendMessage(speechText)
     }
 
-    // Auto-scroll to bottom when new messages arrive or when assistant is thinking
-    LaunchedEffect(uiState.messages.size, uiState.isThinking) {
+    val isImeVisible = WindowInsets.isImeVisible
+
+    // Auto-scroll to bottom when new messages arrive, when assistant is thinking, or when keyboard opens
+    LaunchedEffect(uiState.messages.size, uiState.isThinking, isImeVisible) {
         val totalItems = uiState.messages.size + if (uiState.isThinking) 1 else 0
         if (totalItems > 0) {
             listState.animateScrollToItem(totalItems - 1)
         }
     }
 
-    Scaffold(
+    Column(
         modifier = modifier
             .fillMaxSize()
-            .imePadding(),
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+            .background(MaterialTheme.colorScheme.background)
+    ) {
             // Header bar
             Row(
                 modifier = Modifier
@@ -173,7 +173,8 @@ fun ChatScreen(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.verticalScroll(rememberScrollState())
                     ) {
                         Surface(
                             shape = CircleShape,
@@ -332,12 +333,12 @@ fun ChatScreen(
                 color = MaterialTheme.colorScheme.background,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
+                    .imePadding()
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -398,7 +399,6 @@ fun ChatScreen(
                 }
             }
         }
-    }
 }
 
 @Composable

@@ -32,10 +32,12 @@ import androidx.compose.material.icons.outlined.EditCalendar
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.PendingActions
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -43,6 +45,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -80,6 +83,8 @@ fun TodayScreen(
     viewModel: TodayViewModel,
     onNavigateToTasks: () -> Unit,
     onNavigateToChat: () -> Unit,
+    userSession: com.example.data.repo.UserSession? = null,
+    onSignOut: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -89,12 +94,18 @@ fun TodayScreen(
 
     var quickInputText by remember { mutableStateOf("") }
     var isTimezoneDialogOpen by remember { mutableStateOf(false) }
+    var isProfileDialogOpen by remember { mutableStateOf(false) }
 
-    val greeting = remember(now) {
+    val displayName = remember(userSession) {
+        if (userSession?.isGuest == true) "Guest"
+        else userSession?.fullName?.ifBlank { "Himanshu" } ?: "Himanshu"
+    }
+
+    val greeting = remember(now, displayName) {
         when (now.hour) {
-            in 5..11 -> "Good morning, Himanshu"
-            in 12..16 -> "Good afternoon, Himanshu"
-            else -> "Good evening, Himanshu"
+            in 5..11 -> "Good morning, $displayName"
+            in 12..16 -> "Good afternoon, $displayName"
+            else -> "Good evening, $displayName"
         }
     }
 
@@ -105,6 +116,62 @@ fun TodayScreen(
     if (isTimezoneDialogOpen) {
         com.example.ui.components.TimezoneSelectionDialog(
             onDismissRequest = { isTimezoneDialogOpen = false }
+        )
+    }
+
+    if (isProfileDialogOpen) {
+        AlertDialog(
+            onDismissRequest = { isProfileDialogOpen = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = if (userSession?.isGuest == true) "Guest User" else (userSession?.fullName ?: "User Account"),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (userSession?.isGuest != true && userSession?.email?.isNotBlank() == true) {
+                        Text(
+                            text = "Email: ${userSession.email}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Text(
+                        text = if (userSession?.isGuest == true)
+                            "You are browsing in Guest Mode. Your tasks and data are stored locally on this device."
+                        else
+                            "Account is stored locally in Room SQLite database. Cryptographically secured with SHA-256.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isProfileDialogOpen = false
+                        onSignOut()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Sign Out")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { isProfileDialogOpen = false }) {
+                    Text("Close")
+                }
+            }
         )
     }
 
@@ -219,30 +286,63 @@ fun TodayScreen(
                         )
                     }
 
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .clickable { isTimezoneDialogOpen = true }
-                            .padding(top = 4.dp)
-                            .testTag("today_timezone_chip")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        // User Profile Chip
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                            modifier = Modifier
+                                .clickable { isProfileDialogOpen = true }
+                                .testTag("today_profile_chip")
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Public,
-                                contentDescription = "Timezone",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Text(
-                                text = com.example.util.TimezoneManager.getShortLabel(userZone),
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Person,
+                                    contentDescription = "User Account",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = if (userSession?.isGuest == true) "Guest" else displayName.take(10),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+                        // Timezone Chip
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier
+                                .clickable { isTimezoneDialogOpen = true }
+                                .testTag("today_timezone_chip")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Public,
+                                    contentDescription = "Timezone",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = com.example.util.TimezoneManager.getShortLabel(userZone),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }
